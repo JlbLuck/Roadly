@@ -1,7 +1,7 @@
 'use strict';
 const PREFIX = 'roadly-' + self.registration.scope;
-const CACHE = PREFIX + '-v03';
-const ASSETS = ['./', './index.html', './style.css', './app.js', './core.js', './navigation.js', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
+const CACHE = PREFIX + '-v031';
+const ASSETS = ['./', './index.html', './style.css?v=0.3.1', './app.js?v=0.3.1', './core.js?v=0.3.1', './navigation.js?v=0.3.1', './config.js?v=0.3.1', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
