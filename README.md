@@ -1,4 +1,4 @@
-# Roadly Web 0.2
+# Roadly Web 0.3
 
 Persönliche Karten-Web-App für iPhone und GitHub Pages. Keine Apple-Developer-Mitgliedschaft, kein API-Schlüssel und kein Build erforderlich. Kein Google-Maps-Produkt.
 
@@ -21,7 +21,7 @@ Wenn die Dateien von ChatGPT direkt in dein Repository geschrieben werden sollen
 - **◎** schaltet GPS ein. Standort erlauben und auf „GPS aktiv“ warten.
 - Adresse/Ort eingeben und den Pfeil antippen. Es erfolgt keine automatische Suche bei jedem Tastendruck.
 - Treffer wählen oder auf einen Punkt in der Karte tippen. Route, geschätzte Zeit und Wegbeschreibung werden geladen.
-- **Navigation** öffnet Apple Karten für die eigentliche geführte Navigation. Roadly selbst bietet eine Routenübersicht und keine kontinuierliche Abbiegeführung.
+- **Navigation starten** beginnt die GPS-geführte 2D-Navigation direkt in Roadly, mit nächstem Abbiegeschritt, Sprachhinweisen, Kartenverfolgung, Reststrecke und geschätzter Ankunft. **Navigation beenden** stoppt die Führung. Keine Weiterleitung an Apple Karten.
 - **Blitzerwarnung testen** startet eine beschleunigte, vollständig fiktive Simulation in Stuttgart. Sie funktioniert ohne Standortfreigabe. Kartendaten benötigen Internet.
 - In den Einstellungen lassen sich eigene Messstellen importieren. Warnungen starten deaktiviert.
 
@@ -49,7 +49,7 @@ https://www.gesetze-im-internet.de/stvo_2013/__23.html
 - Leaflet 1.9.4 über unpkg (Version und Integritätswerte festgelegt).
 - Karten: OpenStreetMap-Standardtiles. Normale interaktive Nutzung, sichtbare Attribution, Browser-HTTP-Cache; keine Offline-Karten oder Massendownloads.
 - Suche: öffentlicher Photon-Demoserver von komoot. Nur explizite Suchanfragen, mindestens 1,5 s Abstand; 30 Suchergebnisse im Sitzungsspeicher zwischengespeichert.
-- Routen: öffentlicher OSRM-Demoserver; nur explizite Zielwahl, mindestens 1,5 s Abstand. Kein GPS-Dauerstream an den Routenserver.
+- Routen: öffentlicher OSRM-Demoserver; nur explizite Zielwahl, mindestens 1,5 s Abstand. Bei mindestens 8 Sekunden anhaltender Abweichung von über 60 m (bei GPS-Ungenauigkeit ggf. mehr) wird die Route neu berechnet, höchstens einmal in 30 Sekunden. Neue Berechnungen senden den aktuellen Start und das Ziel. Kein GPS-Dauerstream an den Routenserver.
 - Anbieteradressen in `config.js` austauschbar. Demo-Dienste ohne SLA, für kleine persönliche Tests. Für viele Nutzer ist ein geeigneter Dienst/Backend mit anbieterweiter Ratenbegrenzung nötig. Keine Garantie, dass öffentliche Dienste dauerhaft kostenlos/verfügbar bleiben.
 - Dienste und GitHub erhalten technisch notwendige Verbindungsdaten, Kartenbereiche, Suchbegriffe bzw. Start- und Zielkoordinaten. Kein eigener Server, keine Standortaufzeichnung, keine Analyse-SDKs. Suchcache und Importdaten nur im Arbeitsspeicher.
 - Der Service Worker speichert eigene App-Dateien lokal; keine externen Kartenkacheln oder API-Ergebnisse. Beim allerersten Aufruf ist Internet erforderlich. Zum Entfernen aller lokalen App-Daten Safari-Websitedaten für die Domain löschen.
@@ -64,10 +64,14 @@ https://leafletjs.com/examples/quick-start/
 
 ## Projektdateien
 
-`index.html`, `style.css`, `app.js`, `core.js`, `config.js`, `sw.js`, `manifest.webmanifest`, beide PNG-Icons und diese README gemeinsam in das Hauptverzeichnis des Repository laden. Alle Pfade sind relativ, damit die App unter /roadly/ läuft.
+`index.html`, `style.css`, `app.js`, `core.js`, `navigation.js`, `config.js`, `sw.js`, `manifest.webmanifest`, beide PNG-Icons und diese README gemeinsam in das Hauptverzeichnis des Repository laden. Alle Pfade sind relativ, damit die App unter /roadly/ läuft.
 
 ## Verifikation
 
-JavaScript-Syntax, Distanz-/Warnlogik, JSON-Validierung und Referenzen auf lokale Dateien wurden automatisiert geprüft. Keine Safari-/iPhone-Sichtprüfung und kein Ende-zu-Ende-Test der externen Dienste in dieser Umgebung. Die GitHub-Veröffentlichung ist ohne neues Zielrepository noch nicht erfolgt.
+JavaScript-Syntax, Distanz-/Warnlogik, JSON-Validierung und Referenzen auf lokale Dateien wurden automatisiert geprüft. Keine Safari-/iPhone-Sichtprüfung und kein Ende-zu-Ende-Test der externen Dienste in dieser Umgebung. Die Dateien werden über GitHub Pages veröffentlicht. Automatisierte Tests prüfen zusätzlich Abbiegefortschritt, Reststrecke, GPS-Ausfälle, Neuberechnungsschwelle, Ankunft und den Start-/Stopp-Ablauf mit simulierten Browser-Schnittstellen. Ein realer Fahrtest wurde nicht durchgeführt.
 
-Nach Veröffentlichung auf dem iPhone prüfen: Karten laden, Standort erlauben/ablehnen, Zielsuche, Route, Apple-Karten-Übergabe, Testfahrt mit Ton, Importfehler, Offlinezustand, Home-Bildschirm und Rückkehr nach Sperren.
+Nach Veröffentlichung auf dem iPhone prüfen: Karten laden, Standort erlauben/ablehnen, Zielsuche, Route, interne Navigation, Testfahrt mit Ton, Importfehler, Offlinezustand, Home-Bildschirm und Rückkehr nach Sperren.
+
+## Navigation 0.3 – technische Grenzen
+
+Die Karte bleibt nach Norden ausgerichtet. Keine 3D-Ansicht oder Fahrspurführung. Abbiegefortschritt wird lokal auf der Routenlinie geschätzt, ohne professionelles Straßen-Matching. Parallelstraßen, Schleifen und komplexe Kreuzungen können falsch zugeordnet werden. GPS ungenauer als 50 m oder älter als 10 Sekunden pausiert Navigationshinweise. Nach Verlassen der App wird bei Rückkehr die Ortung fortgesetzt; größere Abweichungen lösen eine Neuberechnung aus. Zeitangaben basieren auf der geplanten Strecke, ohne Live-Verkehr. Bildschirm-Wachhalten wird angefragt, soweit vom Browser unterstützt. Sprachhinweise können in den Einstellungen ausgeschaltet werden.
